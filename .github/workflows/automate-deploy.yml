@@ -37,30 +37,13 @@ jobs:
             linux/amd64
           push: true
           tags: |
-            ghcr.io/activepieces/activepieces-cloud:${{ env.RELEASE }}.${{ github.sha }}
-
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh/
-          echo "$SSH_KEY" > ~/.ssh/ops.key
-          chmod 600 ~/.ssh/ops.key
-          cat >>~/.ssh/config <<END
-          Host ops
-            HostName $SSH_HOST
-            User $SSH_USER
-            IdentityFile ~/.ssh/ops.key
-            StrictHostKeyChecking no
-          END
-        env:
-          SSH_USER: ${{ secrets.DEV_OPS_USERNAME }}
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.DEV_OPS_HOST }}
+            ghcr.io/activepieces/activepieces-local:${{ env.RELEASE }}.${{ github.sha }}
 
       - name: Deploy Web
         run: |
-          ssh ops -t -t 'bash -ic "cd mrsk && kamal deploy --version ${{ env.RELEASE }}.${{ github.sha }} --config-file=config/web.yml --skip-push; exit"'
+          docker-compose -f docker-compose.yml up -d
 
       - name: Deploy Workers
         run: |
-          ssh ops -t -t 'bash -ic "cd mrsk && kamal deploy --version ${{ env.RELEASE }}.${{ github.sha }} --config-file=config/workers.yml --skip-push; exit"'
+          echo "Deploying workers to localhost..."
 
